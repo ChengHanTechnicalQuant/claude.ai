@@ -12,7 +12,7 @@ export const isISODate = (s: unknown): s is string => typeof s === 'string' && I
 
 /** 解析伺服器送來的推播內容；格式不對也不能出錯，改顯示預設文字 */
 export function parsePushMessage(text: string | null | undefined): PushMessage {
-  const fallback: PushMessage = { title: '藍染週記', body: '你有一則提醒' };
+  const fallback: PushMessage = { title: 'Calendar', body: '你有一則提醒' };
   if (!text) return fallback;
   try {
     const d = JSON.parse(text) as Record<string, unknown>;

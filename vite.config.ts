@@ -16,8 +16,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: false,
       manifest: {
-        name: '藍染週記',
-        short_name: '藍染週記',
+        name: 'Calendar',
+        short_name: 'Calendar',
         lang: 'zh-Hant',
         start_url: './',
         scope: './',

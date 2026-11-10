@@ -8,10 +8,10 @@ describe('parsePushMessage', () => {
     });
   });
   it('沒有內容或格式不對也不出錯', () => {
-    expect(parsePushMessage(null).title).toBe('藍染週記');
+    expect(parsePushMessage(null).title).toBe('Calendar');
     expect(parsePushMessage('').body).toBe('你有一則提醒');
     expect(parsePushMessage('純文字').body).toBe('純文字');
-    expect(parsePushMessage('{"title":5,"date":"hello"}')).toMatchObject({ title: '藍染週記', date: undefined });
+    expect(parsePushMessage('{"title":5,"date":"hello"}')).toMatchObject({ title: 'Calendar', date: undefined });
   });
 });
 

@@ -13,7 +13,7 @@ export async function enableNotifications(db: AppDB): Promise<string> {
   }
   const result = await Notification.requestPermission();
   if (result !== 'granted') {
-    return '沒有取得通知權限。可以到 iPhone「設定 → 通知 → 藍染週記」開啟。';
+    return '沒有取得通知權限。可以到 iPhone「設定 → 通知 → Calendar」開啟。';
   }
   // 從現在開始算，不要把開啟之前的事項當成「錯過的提醒」
   await createReminderStore(db).setLastSeen(Date.now());
