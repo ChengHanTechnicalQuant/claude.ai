@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Banner } from './components/Banner';
 import { CalendarSheet } from './components/CalendarSheet';
 import { EditSheet } from './components/EditSheet';
 import { CalendarIcon, GearIcon, PlusIcon } from './components/Icons';
+import { MissedBlock } from './components/MissedBlock';
 import { Notes } from './components/Notes';
+import { SettingsPage } from './components/SettingsPage';
 import type { SwipeAction } from './components/SwipeRow';
 import { TagBar } from './components/TagBar';
 import { TaskCard } from './components/TaskCard';
@@ -11,14 +14,19 @@ import { WeekStrip } from './components/WeekStrip';
 import { commit } from './db/changes';
 import { db } from './db/db';
 import { addNote, rolloverDb } from './db/maintenance';
+import { loadSettings, saveSettings } from './db/settings';
 import { useLive } from './db/useLive';
 import * as A from './lib/actions';
 import type { Action, Changes } from './lib/changes';
 import { rangeText, weekDates } from './lib/dates';
 import { formFromTask, newForm, type EditorForm } from './lib/editor';
 import { newId } from './lib/id';
+import type { Reminder } from './lib/reminders';
 import { hasContent, visibleNotes, visibleTasks } from './lib/sort';
+import { isISODate } from './lib/swLogic';
 import { useToday } from './lib/useToday';
+import { enableNotifications, sendTestNotification } from './notify/enable';
+import { useReminders } from './notify/useReminders';
 import type { Note, Tag, Task } from './types';
 
 const BLUE = '#2E4A6B';
@@ -26,11 +34,20 @@ const GREY = '#6F6A60';
 const RED = '#A4554B';
 const TOAST_MS = 4000;
 
-export default function App() {
+interface AppProps {
+  initialMissed?: Reminder[];
+  initialDay?: string;
+}
+
+export default function App({ initialMissed = [], initialDay }: AppProps) {
   const tasks = useLive(() => db.tasks.toArray());
   const notes = useLive(() => db.notes.toArray());
+  const settings = useLive(() => loadSettings(db));
   const today = useToday();
-  const [day, setDay] = useState(today);
+  const [day, setDay] = useState(initialDay ?? today);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [missed, setMissed] = useState<Reminder[]>(initialMissed);
+  const [banner, setBanner] = useState<Reminder | null>(null);
   const [tag, setTag] = useState<Tag>('全部');
   const [openId, setOpenId] = useState<string | null>(null);
   const [form, setForm] = useState<EditorForm | null>(null);
@@ -47,13 +64,34 @@ export default function App() {
     if (prev !== today) setDay((d) => (d === prev ? today : d));
   }, [today]);
 
+  useReminders({
+    tasks,
+    settings,
+    onLive: setBanner,
+    onMissed: (list) => setMissed((cur) => [...cur, ...list.filter((r) => !cur.some((c) => c.id === r.id))]),
+  });
+
+  // 點系統通知時，如果 App 已經開著，Service Worker 會通知我們跳到那一天
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'open-date' && isISODate(e.data.date)) {
+        setDay(e.data.date);
+        setSettingsOpen(false);
+        setCalOpen(false);
+        setForm(null);
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker?.removeEventListener('message', onMessage);
+  }, []);
+
   const marks = useMemo(() => {
     const s = new Set<string>();
     if (tasks && notes) for (const iso of weekDates(day)) if (hasContent(iso, tasks, notes)) s.add(iso);
     return s;
   }, [tasks, notes, day]);
 
-  if (!tasks || !notes) return <div className="app" />;
+  if (!tasks || !notes || !settings) return <div className="app" />;
 
   const showToast = (text: string, undo: Changes) => {
     clearTimeout(toastTimer.current);
@@ -123,12 +161,13 @@ export default function App() {
       }}
     >
       <header className="header">
-        <button type="button" className="gear" aria-label="設定">
+        <button type="button" className="gear" aria-label="設定" onClick={() => { setOpenId(null); setSettingsOpen(true); }}>
           <GearIcon />
         </button>
         <span className="range">{rangeText(day)}</span>
       </header>
 
+      <MissedBlock items={missed} today={today} onClose={() => setMissed([])} />
       <WeekStrip day={day} marks={marks} onPick={pickDay} />
       <TagBar tag={tag} onPick={(t) => { setTag(t); setOpenId(null); }} />
 
@@ -163,6 +202,18 @@ export default function App() {
           <CalendarIcon />
         </button>
       </div>
+
+      {banner && <Banner reminder={banner} onClose={() => setBanner(null)} />}
+
+      {settingsOpen && (
+        <SettingsPage
+          settings={settings}
+          onChange={(patch) => void saveSettings(db, patch)}
+          onEnable={() => enableNotifications(db)}
+          onTest={sendTestNotification}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
 
       {toast && <Toast text={toast.text} onUndo={undo} />}
 

@@ -16,6 +16,7 @@ export async function purgeExpired(db: AppDB, now: number = Date.now()): Promise
   const notes = await db.notes.toArray();
   await db.tasks.bulkDelete(tasks.filter((t) => isExpired(t.deletedAt, now)).map((t) => t.id));
   await db.notes.bulkDelete(notes.filter((n) => isExpired(n.deletedAt, now)).map((n) => n.id));
+  await db.firedReminders.where('firedAt').below(now - PURGE_AFTER_MS).delete();
 }
 
 /** 範例資料：日期都相對於「今天」，每次第一次開啟才放一次 */

@@ -275,3 +275,90 @@ input::placeholder { color: #7A7F86; }
   border-radius: 999px; border: 1px solid var(--border);
   background: transparent; color: var(--text); font-size: 13px;
 }
+
+/* 錯過的提醒 */
+.missed {
+  flex: none;
+  margin: 0 20px 12px;
+  background: var(--card);
+  border: 1px solid var(--delay-bd);
+  border-radius: 16px;
+  padding: 10px 14px 10px 16px;
+  box-shadow: 0 1px 0 rgba(34, 38, 43, 0.06);
+}
+.missed-head { display: flex; align-items: center; gap: 4px; }
+.missed-head h2 { flex: 1; margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: var(--delay-fg); }
+.missed-count { font-family: var(--mono); font-weight: 500; margin-left: 4px; }
+.missed-head button {
+  height: 32px; padding: 0 8px; border: none; background: none;
+  color: var(--text-2); font-size: 13px;
+}
+.missed ul { list-style: none; margin: 4px 0 0; padding: 0; max-height: 132px; overflow-y: auto; }
+.missed li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 6px 0; border-top: 1px dashed var(--line); }
+.missed-title { font-size: 14px; font-weight: 500; }
+.missed-body, .missed-date { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+
+/* App 內提醒 */
+.banner {
+  position: absolute; z-index: 7;
+  left: 20px; right: 20px;
+  top: max(12px, calc(env(safe-area-inset-top) + 4px));
+  padding: 12px 8px 12px 16px;
+  border-radius: 14px;
+  background: var(--text); color: var(--bg);
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 6px 20px rgba(34, 38, 43, 0.25);
+}
+.banner-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.banner-text strong { font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.banner-text span { font-family: var(--mono); font-size: 12px; color: #B9CCE3; }
+.banner button { width: 40px; height: 40px; border: none; background: none; color: var(--bg); font-size: 16px; }
+
+/* 設定頁 */
+.settings {
+  position: absolute; inset: 0; z-index: 6;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.settings-head {
+  flex: none; position: relative;
+  padding: max(36px, calc(env(safe-area-inset-top) + 12px)) 20px 12px;
+  display: flex; justify-content: center;
+}
+.settings-head h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0.06em; }
+.settings-head .back {
+  position: absolute; left: 8px; top: max(30px, calc(env(safe-area-inset-top) + 6px));
+  width: 44px; height: 44px; padding: 0; border: none; background: none; color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+}
+.settings-body {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 18px;
+}
+.group-title { margin: 0 4px 8px; font-size: 12px; font-weight: 500; color: var(--text-2); letter-spacing: 0.12em; }
+.group { background: var(--card); border-radius: 16px; box-shadow: 0 1px 0 rgba(34, 38, 43, 0.06); overflow: hidden; }
+.group .row {
+  min-height: 48px; padding: 10px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-bottom: 1px dashed var(--line); font-size: 15px;
+}
+.group .row:last-child { border-bottom: none; }
+.group .row.stack { flex-direction: column; align-items: stretch; gap: 10px; }
+.group .row.buttons { gap: 10px; }
+.group .row.note { font-size: 13px; color: var(--text-2); line-height: 1.6; margin: 0; }
+.value { font-family: var(--font); font-size: 14px; color: var(--text-2); }
+.btn-outline {
+  flex: 1; height: 40px; padding: 0 10px;
+  border-radius: 999px; border: 1px solid var(--blue);
+  background: transparent; color: var(--blue); font-size: 13px;
+}
+.btn-outline:disabled { opacity: 0.45; cursor: default; }
+.time-field {
+  height: 40px; padding: 0 10px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--bg); font-family: var(--mono); font-size: 16px; color: var(--text);
+}
+.help { margin: 0; padding: 12px 18px 12px 34px; font-size: 13px; line-height: 1.7; color: var(--text-2); display: flex; flex-direction: column; gap: 6px; }
+.version { margin: 0; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--text-2); }
