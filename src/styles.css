@@ -67,6 +67,7 @@ input::placeholder { color: #7A7F86; }
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
+  touch-action: pan-y;
 }
 .day {
   height: 68px;
@@ -506,3 +507,9 @@ input { caret-color: var(--blue); accent-color: var(--blue); }
 .wheel-col:focus-visible .wheel-item.on { color: var(--blue); }
 .cal-day:disabled { opacity: 0.3; cursor: default; }
 .cal-day:disabled:active { transform: none; }
+
+/* 左右滑動換週：新的一週從滑動的方向滑進來 */
+.week.from-right { animation: weekFromRight 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.week.from-left { animation: weekFromLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+@keyframes weekFromRight { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: none; } }
+@keyframes weekFromLeft { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: none; } }

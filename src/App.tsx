@@ -21,7 +21,7 @@ import * as A from './lib/actions';
 import { deleteSeries, withRepeats } from './lib/repeat';
 import type { Action, Changes } from './lib/changes';
 import { useAnimatedList } from './lib/animatedList';
-import { rangeText, weekDates } from './lib/dates';
+import { addDays, rangeText, weekDates } from './lib/dates';
 import { formFromTask, newForm, type EditorForm } from './lib/editor';
 import { newId } from './lib/id';
 import type { Reminder } from './lib/reminders';
@@ -200,7 +200,7 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
       </header>
 
       {missedP.shown && <MissedBlock items={missedP.shown} closing={missedP.closing} today={today} onClose={() => setMissed([])} />}
-      <WeekStrip day={day} marks={marks} onPick={pickDay} />
+      <WeekStrip day={day} marks={marks} onPick={pickDay} onShiftWeek={(dir) => pickDay(addDays(day, dir * 7))} />
       <TagBar tag={tag} onPick={(t) => { setTag(t); setOpenId(null); }} />
 
       <main className="main">
