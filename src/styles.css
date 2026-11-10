@@ -450,3 +450,13 @@ input { caret-color: var(--blue); accent-color: var(--blue); }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
 
 .note-input button.shake { animation: shake 0.36s ease; }
+
+/* iPhone 的日期輸入框自帶較高的內距，會比旁邊的膠囊高；強制跟其他膠囊同高 */
+.date-chip {
+  -webkit-appearance: none; appearance: none;
+  height: 40px; min-height: 40px; max-height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; line-height: 1; margin: 0;
+}
+.date-chip::-webkit-date-and-time-value { text-align: center; min-height: 0; margin: 0; padding: 0; line-height: 1; }
+.date-chip::-webkit-datetime-edit { padding: 0; }
