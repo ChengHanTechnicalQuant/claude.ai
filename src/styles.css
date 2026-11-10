@@ -39,17 +39,21 @@ input::placeholder { color: #7A7F86; }
 
 /* 頂部 */
 .header {
+  --pt: max(36px, calc(env(safe-area-inset-top) + 12px));
+  --range-h: 20px; /* 日期區間那一行的高度 */
   position: relative;
-  padding: max(36px, calc(env(safe-area-inset-top) + 12px)) 20px 16px;
+  padding: var(--pt) 20px 16px;
   display: flex;
   justify-content: center;
   flex: none;
 }
-.header .range { font-family: var(--mono); font-size: 14px; color: var(--text-2); }
+.header .range { font-family: var(--mono); font-size: 14px; line-height: var(--range-h); color: var(--text-2); }
+/* 水平：和週列最右邊那一欄（日）的中心對齊；垂直：和日期區間同一行的中心對齊。
+   週列左右各 20px、7 欄、間距 4px → 一欄寬 = (全寬 − 64px) ÷ 7 */
 .gear {
   position: absolute;
-  left: 8px;
-  top: max(30px, calc(env(safe-area-inset-top) + 6px));
+  right: calc(20px + (100% - 64px) / 14 - 22px);
+  top: calc(var(--pt) + var(--range-h) / 2 - 22px);
   width: 44px; height: 44px;
   padding: 0;
   display: flex; align-items: center; justify-content: center;
@@ -86,7 +90,9 @@ input::placeholder { color: #7A7F86; }
 /* 分類膠囊 */
 .tags { flex: none; padding: 18px 20px 6px; display: flex; gap: 8px; }
 .tag {
-  flex: 1; min-width: 0; height: 36px; padding: 0;
+  flex: 1; min-width: 0; height: 36px;
+  /* Noto Sans TC 的字身在行框裡偏低，實測約低 0.9px；底部多留 2px 讓文字上移 1px，視覺上才是正中 */
+  padding: 0 0 2px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: transparent; color: var(--text);
