@@ -54,7 +54,7 @@ export function Notes({ entries, resetKey, openId, actionsFor, onOpenChange, onA
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.nativeEvent.isComposing) submit();
             }}
-            placeholder="想到什麼先記下來…"
+            placeholder="想到什麼先記下來"
             enterKeyHint="done"
           />
           <button type="button" onClick={submit}>記下</button>

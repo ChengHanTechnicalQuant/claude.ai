@@ -152,12 +152,12 @@ input::placeholder { color: #7A7F86; }
 .note-input { display: flex; gap: 8px; align-items: center; padding: 6px 18px; }
 /* 16px：iPhone 的輸入框小於 16px 時，點進去畫面會自動放大 */
 .note-input input {
-  flex: 1; min-width: 0; height: 44px;
+  flex: 1; min-width: 0; height: 44px; padding: 0; margin: 0;
   border: none; background: transparent; outline: none;
   font-size: 16px; color: var(--text);
 }
 .note-input button {
-  height: 36px; padding: 0 14px; border-radius: 999px;
+  height: 36px; padding: 0 14px 2px; border-radius: 999px;
   border: 1px solid var(--blue); background: transparent; color: var(--blue);
   font-size: 13px;
 }
@@ -221,6 +221,7 @@ input::placeholder { color: #7A7F86; }
 .scrim { position: absolute; inset: 0; border: none; padding: 0; background: rgba(34, 38, 43, 0.32); }
 .sheet {
   position: relative;
+  overscroll-behavior: contain;
   max-height: 94dvh; overflow-y: auto;
   background: var(--bg);
   border-radius: 22px 22px 0 0;
@@ -240,12 +241,12 @@ input::placeholder { color: #7A7F86; }
 .time-input { height: 44px; font-family: var(--mono); }
 .chips { display: flex; gap: 8px; }
 .chip {
-  flex: 1; min-width: 0; height: 40px; padding: 0;
+  flex: 1; min-width: 0; height: 40px; padding: 0 0 2px;
   border-radius: 999px; border: 1px solid var(--border);
   background: transparent; color: var(--text); font-size: 13px;
 }
 .chip[aria-pressed='true'], .chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
-.date-chip { flex: 1.6; padding: 0 10px; font-family: var(--mono); font-size: 12px; }
+.date-chip { flex: 1.6; padding: 0 10px 2px; font-family: var(--mono); font-size: 12px; }
 .sheet-actions { display: flex; gap: 10px; margin-top: 4px; flex: none; }
 .btn-ghost, .btn-primary { flex: 1; height: 48px; border-radius: 14px; font-size: 15px; }
 .btn-ghost { border: 1px solid var(--border); background: transparent; color: var(--text); }
@@ -278,7 +279,7 @@ input::placeholder { color: #7A7F86; }
 .cal-day[aria-pressed='true'] { background: var(--blue); color: var(--bg); border-color: var(--blue); }
 .cal-day[aria-pressed='true'].has .dot { background: var(--bg); }
 .cal-today {
-  align-self: center; height: 40px; padding: 0 18px; flex: none;
+  align-self: center; height: 40px; padding: 0 18px 2px; flex: none;
   border-radius: 999px; border: 1px solid var(--border);
   background: transparent; color: var(--text); font-size: 13px;
 }
@@ -358,7 +359,7 @@ input::placeholder { color: #7A7F86; }
 .group .row.note { font-size: 13px; color: var(--text-2); line-height: 1.6; margin: 0; }
 .value { font-family: var(--font); font-size: 14px; color: var(--text-2); }
 .btn-outline {
-  flex: 1; height: 40px; padding: 0 10px;
+  flex: 1; height: 40px; padding: 0 10px 2px;
   border-radius: 999px; border: 1px solid var(--blue);
   background: transparent; color: var(--blue); font-size: 13px;
 }
