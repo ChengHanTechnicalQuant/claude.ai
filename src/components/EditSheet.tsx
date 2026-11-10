@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { quickDates, type EditorForm, type TimeMode } from '../lib/editor';
 import { CATEGORIES, type Category } from '../types';
 import { Sheet } from './Sheet';
@@ -17,6 +17,7 @@ const TIME_CHIPS: [TimeMode, string][] = [['', '不設'], ['上午', '上午'], 
 export function EditSheet({ form, closing, today, onChange, onCancel, onSave }: Props) {
   const quick = quickDates(today);
   const isQuick = quick.includes(form.date);
+  const [shake, setShake] = useState(false);
   const canSave = form.title.trim().length > 0;
   const isNew = form.mode === 'new';
 
@@ -92,7 +93,18 @@ export function EditSheet({ form, closing, today, onChange, onCancel, onSave }: 
 
         <div className="sheet-actions">
           <button type="button" className="btn-ghost" onClick={onCancel}>取消</button>
-          <button type="button" className="btn-primary" disabled={!canSave} onClick={onSave}>
+          <button
+            type="button"
+            className={'btn-primary' + (shake ? ' shake' : '')}
+            aria-disabled={!canSave}
+            onAnimationEnd={() => setShake(false)}
+            onClick={() => {
+              if (canSave) return onSave();
+              setShake(false);
+              requestAnimationFrame(() => setShake(true));
+              document.getElementById('ed-title')?.focus();
+            }}
+          >
             {isNew ? '記下' : '儲存'}
           </button>
         </div>

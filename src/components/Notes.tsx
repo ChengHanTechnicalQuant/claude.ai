@@ -15,9 +15,16 @@ interface Props {
 
 export function Notes({ entries, resetKey, openId, actionsFor, onOpenChange, onAdd }: Props) {
   const [draft, setDraft] = useState('');
+  const [shake, setShake] = useState(false);
   const submit = () => {
     const text = draft.trim();
-    if (!text) return;
+    if (!text) {
+      // 空的：按鈕輕晃一下，游標回到輸入框
+      setShake(false);
+      requestAnimationFrame(() => setShake(true));
+      document.getElementById('note')?.focus();
+      return;
+    }
     onAdd(text);
     setDraft('');
   };
@@ -57,7 +64,7 @@ export function Notes({ entries, resetKey, openId, actionsFor, onOpenChange, onA
             placeholder="想到什麼先記下來"
             enterKeyHint="done"
           />
-          <button type="button" onClick={submit}>記下</button>
+          <button type="button" className={shake ? 'shake' : undefined} onAnimationEnd={() => setShake(false)} onClick={submit}>記下</button>
         </div>
       </div>
     </section>

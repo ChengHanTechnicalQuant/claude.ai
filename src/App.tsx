@@ -180,7 +180,7 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
         <button type="button" className="gear" aria-label="設定" onClick={() => { setOpenId(null); setSettingsOpen(true); }}>
           <GearIcon />
         </button>
-        <span className="range">{rangeText(day)}</span>
+        <button type="button" className="range" aria-label="回到今天" onClick={() => pickDay(today)}>{rangeText(day)}</button>
       </header>
 
       {missedP.shown && <MissedBlock items={missedP.shown} closing={missedP.closing} today={today} onClose={() => setMissed([])} />}

@@ -429,3 +429,24 @@ input::placeholder { color: #7A7F86; }
   .day:active, .tag:active, .chip:active, .cal-day:active, .btn-new:active, .btn-cal:active, .btn-ghost:active, .btn-primary:active,
   .btn-outline:active, .gear:active, .back:active, .cal-nav:active { transform: none; }
 }
+
+/* ===== 細節版 ===== */
+/* 日期區間：可以點，點了回到今天 */
+button.range { border: none; background: none; padding: 0; margin: 0; }
+button.range:active { opacity: 0.55; }
+
+/* 輸入框聚焦：外框與游標用主色 */
+input { caret-color: var(--blue); accent-color: var(--blue); }
+.text-input, .time-field { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.text-input:focus, .time-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46, 74, 107, 0.14); }
+
+/* 空白狀態淡入 */
+.empty { animation: fadeIn 0.4s ease 0.2s backwards; }
+
+/* 儲存鈕不可按：輕輕晃一下 */
+.btn-primary[aria-disabled='true'] { opacity: 0.4; cursor: default; }
+.btn-primary[aria-disabled='true']:active { transform: none; filter: none; }
+.btn-primary.shake { animation: shake 0.36s ease; }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+
+.note-input button.shake { animation: shake 0.36s ease; }
