@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { quickDates, type EditorForm, type TimeMode } from '../lib/editor';
 import { CATEGORIES, type Category } from '../types';
+import { Sheet } from './Sheet';
 
 interface Props {
   form: EditorForm;
+  closing: boolean;
   today: string;
   onChange: (patch: Partial<EditorForm>) => void;
   onCancel: () => void;
@@ -12,7 +14,7 @@ interface Props {
 
 const TIME_CHIPS: [TimeMode, string][] = [['', '不設'], ['上午', '上午'], ['下午', '下午'], ['pick', '指定']];
 
-export function EditSheet({ form, today, onChange, onCancel, onSave }: Props) {
+export function EditSheet({ form, closing, today, onChange, onCancel, onSave }: Props) {
   const quick = quickDates(today);
   const isQuick = quick.includes(form.date);
   const canSave = form.title.trim().length > 0;
@@ -27,10 +29,7 @@ export function EditSheet({ form, today, onChange, onCancel, onSave }: Props) {
   }, [onCancel]);
 
   return (
-    <div className="overlay">
-      <button type="button" className="scrim" aria-label="關閉" onClick={onCancel} />
-      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
-        <span className="grabber" aria-hidden="true" />
+    <Sheet closing={closing} onClose={onCancel} labelledBy="sheet-title" scrimLabel="關閉">
         <h2 id="sheet-title" className="sheet-title">{isNew ? '新增事項' : '編輯事項'}</h2>
 
         <div className="field">
@@ -97,7 +96,6 @@ export function EditSheet({ form, today, onChange, onCancel, onSave }: Props) {
             {isNew ? '記下' : '儲存'}
           </button>
         </div>
-      </section>
-    </div>
+    </Sheet>
   );
 }

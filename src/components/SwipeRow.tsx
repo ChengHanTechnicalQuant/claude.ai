@@ -19,6 +19,17 @@ interface Props {
 }
 
 const BTN_W = 64;
+/** 拉過按鈕區之後的阻力（越小越難拉）與最多能多拉的距離 */
+const OVERPULL_RESISTANCE = 0.35;
+const OVERPULL_MAX = 36;
+
+/** 手指跟著動的位置：左滑超過按鈕區之後要有阻力，往右不能超過原位 */
+export function swipeX(base: number, dx: number, W: number): number {
+  const raw = base + dx;
+  if (raw >= 0) return 0;
+  if (raw >= -W) return raw;
+  return Math.max(-W - OVERPULL_MAX, -W + (raw + W) * OVERPULL_RESISTANCE);
+}
 
 /**
  * 左滑列。先判斷手勢方向（水平或垂直）才決定要不要跟著手指動，
@@ -32,13 +43,15 @@ export function SwipeRow({ id, open, anyOpen, actions, onOpenChange, onTap, wrap
   const swipedRef = useRef(false); // 這次手勢是不是水平滑動（是的話放開後的 click 要忽略）
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [pressed, setPressed] = useState(false); // 手指按著、還沒判斷成滑動時，給一點按下的回饋
 
   const base = open ? -W : 0;
-  const x = dragging ? Math.max(-W - 30, Math.min(0, base + dx)) : base;
+  const x = dragging ? swipeX(base, dx, W) : base;
 
   const finish = () => {
     const g = gesture.current;
     gesture.current = null;
+    setPressed(false);
     if (g?.axis === 'x') {
       const final = g.base + dxRef.current;
       setDragging(false);
@@ -70,14 +83,18 @@ export function SwipeRow({ id, open, anyOpen, actions, onOpenChange, onTap, wrap
         ))}
       </div>
       <div
-        className={frontClass}
-        style={{ transform: `translateX(${x}px)`, transition: dragging ? 'none' : 'transform 0.22s ease' }}
+        className={frontClass + (pressed ? ' pressed' : '')}
+        style={{
+          transform: `translateX(${x}px)`,
+          transition: (dragging ? 'none' : 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)') + ', background-color 0.15s ease',
+        }}
         onPointerDown={(e) => {
           if (e.pointerType === 'mouse' && e.button !== 0) return;
           gesture.current = { x0: e.clientX, y0: e.clientY, base, axis: null };
           wasOpenRef.current = anyOpen;
           swipedRef.current = false;
           dxRef.current = 0;
+          setPressed(true);
         }}
         onPointerMove={(e) => {
           const g = gesture.current;
@@ -87,6 +104,7 @@ export function SwipeRow({ id, open, anyOpen, actions, onOpenChange, onTap, wrap
           if (!g.axis) {
             if (Math.abs(mx) < 6 && Math.abs(my) < 6) return;
             g.axis = Math.abs(mx) > Math.abs(my) ? 'x' : 'y';
+            setPressed(false);
             if (g.axis === 'x') {
               swipedRef.current = true;
               try {

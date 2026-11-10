@@ -5,6 +5,7 @@ import type { Settings } from '../types';
 
 interface Props {
   settings: Settings;
+  closing: boolean;
   onChange: (patch: Partial<Settings>) => void;
   onEnable: () => Promise<string>;
   onTest: () => Promise<string>;
@@ -19,7 +20,7 @@ const PERMISSION_TEXT: Record<PermissionState, string> = {
   unsupported: '不支援',
 };
 
-export function SettingsPage({ settings, onChange, onEnable, onTest, onClose }: Props) {
+export function SettingsPage({ settings, closing, onChange, onEnable, onTest, onClose }: Props) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [permission, setPermission] = useState<PermissionState>(notificationPermission());
@@ -48,7 +49,7 @@ export function SettingsPage({ settings, onChange, onEnable, onTest, onClose }: 
   };
 
   return (
-    <div className="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div className={'settings' + (closing ? ' closing' : '')} role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <header className="settings-head">
         <button type="button" className="back" onClick={onClose} aria-label="返回">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

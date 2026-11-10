@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from './components/Banner';
 import { CalendarSheet } from './components/CalendarSheet';
 import { EditSheet } from './components/EditSheet';
@@ -18,12 +18,14 @@ import { loadSettings, saveSettings } from './db/settings';
 import { useLive } from './db/useLive';
 import * as A from './lib/actions';
 import type { Action, Changes } from './lib/changes';
+import { useAnimatedList } from './lib/animatedList';
 import { rangeText, weekDates } from './lib/dates';
 import { formFromTask, newForm, type EditorForm } from './lib/editor';
 import { newId } from './lib/id';
 import type { Reminder } from './lib/reminders';
 import { hasContent, visibleNotes, visibleTasks } from './lib/sort';
 import { isISODate } from './lib/swLogic';
+import { usePresence } from './lib/usePresence';
 import { useToday } from './lib/useToday';
 import { enableNotifications, sendTestNotification } from './notify/enable';
 import { useReminders } from './notify/useReminders';
@@ -84,6 +86,21 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
     navigator.serviceWorker?.addEventListener('message', onMessage);
     return () => navigator.serviceWorker?.removeEventListener('message', onMessage);
   }, []);
+
+  // 讓面板、提示「消失」時也有動畫
+  const formP = usePresence(form);
+  const calP = usePresence(calOpen ? true : null);
+  const settingsP = usePresence(settingsOpen ? true : null, 340);
+  const toastP = usePresence(toast, 240);
+  const bannerP = usePresence(banner, 240);
+  const missedP = usePresence(missed.length > 0 ? missed : null, 240);
+  const closeBanner = useCallback(() => setBanner(null), []);
+
+  // 事項、隨手記增減時的展開／收合動畫；換日期或分類時不做動畫
+  const ready = !!tasks && !!notes;
+  const listKey = day + '|' + tag;
+  const taskEntries = useAnimatedList(tasks ? visibleTasks(tasks, day, tag) : [], listKey, ready);
+  const noteEntries = useAnimatedList(notes ? visibleNotes(notes, day) : [], day, ready);
 
   const marks = useMemo(() => {
     const s = new Set<string>();
@@ -147,8 +164,7 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
     setOpenId(null);
   };
 
-  const shown = visibleTasks(tasks, day, tag);
-  const dayNotes = visibleNotes(notes, day);
+  const nothingShown = taskEntries.every((e) => e.phase === 'exit');
 
   return (
     <div
@@ -167,25 +183,29 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
         <span className="range">{rangeText(day)}</span>
       </header>
 
-      <MissedBlock items={missed} today={today} onClose={() => setMissed([])} />
+      {missedP.shown && <MissedBlock items={missedP.shown} closing={missedP.closing} today={today} onClose={() => setMissed([])} />}
       <WeekStrip day={day} marks={marks} onPick={pickDay} />
       <TagBar tag={tag} onPick={(t) => { setTag(t); setOpenId(null); }} />
 
       <main className="main">
-        {shown.map((t) => (
-          <TaskCard
-            key={t.id}
-            task={t}
-            open={openId === t.id}
-            anyOpen={openId !== null}
-            actions={taskActions(t)}
-            onOpenChange={setOpenId}
-            onEdit={() => setForm(formFromTask(t))}
-          />
-        ))}
-        {shown.length === 0 && <p className="empty">這天這類沒有安排，留點空白也很好。</p>}
+        <div className="task-list fade-in" key={listKey}>
+          {taskEntries.map(({ item: t, phase }) => (
+            <TaskCard
+              key={t.id}
+              task={t}
+              phase={phase}
+              open={openId === t.id}
+              anyOpen={openId !== null}
+              actions={taskActions(t)}
+              onOpenChange={setOpenId}
+              onEdit={() => setForm(formFromTask(t))}
+            />
+          ))}
+        </div>
+        {nothingShown && <p className="empty">這天這類沒有安排，留點空白也很好。</p>}
         <Notes
-          notes={dayNotes}
+          entries={noteEntries}
+          resetKey={day}
           openId={openId}
           actionsFor={noteActions}
           onOpenChange={setOpenId}
@@ -203,11 +223,12 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
         </button>
       </div>
 
-      {banner && <Banner reminder={banner} onClose={() => setBanner(null)} />}
+      {bannerP.shown && <Banner reminder={bannerP.shown} closing={bannerP.closing} onClose={closeBanner} />}
 
-      {settingsOpen && (
+      {settingsP.shown && (
         <SettingsPage
           settings={settings}
+          closing={settingsP.closing}
           onChange={(patch) => void saveSettings(db, patch)}
           onEnable={() => enableNotifications(db)}
           onTest={sendTestNotification}
@@ -215,11 +236,12 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
         />
       )}
 
-      {toast && <Toast text={toast.text} onUndo={undo} />}
+      {toastP.shown && <Toast text={toastP.shown.text} closing={toastP.closing} onUndo={undo} />}
 
-      {form && (
+      {formP.shown && (
         <EditSheet
-          form={form}
+          form={formP.shown}
+          closing={formP.closing}
           today={today}
           onChange={(patch) => setForm((f) => (f ? { ...f, ...patch } : f))}
           onCancel={() => setForm(null)}
@@ -227,9 +249,10 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
         />
       )}
 
-      {calOpen && (
+      {calP.shown && (
         <CalendarSheet
           day={day}
+          closing={calP.closing}
           today={today}
           marks={(iso) => hasContent(iso, tasks, notes)}
           onPick={(iso) => { pickDay(iso); setCalOpen(false); }}

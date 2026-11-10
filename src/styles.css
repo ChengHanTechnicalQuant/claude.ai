@@ -106,7 +106,7 @@ input::placeholder { color: #7A7F86; }
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 12px 20px;
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex; flex-direction: column; gap: 0;
 }
 
 .card-wrap {
@@ -131,7 +131,7 @@ input::placeholder { color: #7A7F86; }
 .card.done .title { color: var(--done-title); text-decoration: line-through; }
 .card .note { font-size: 13px; color: var(--text-2); line-height: 1.6; }
 
-.empty { margin: 24px 0 8px; text-align: center; font-size: 14px; color: var(--text-2); }
+.empty { margin: 24px 0 18px; text-align: center; font-size: 14px; color: var(--text-2); }
 
 /* 隨手記 */
 .notes { flex: none; margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -227,7 +227,8 @@ input::placeholder { color: #7A7F86; }
   padding: 10px 20px calc(10px + max(16px, env(safe-area-inset-bottom)));
   display: flex; flex-direction: column; gap: 18px;
 }
-.grabber { align-self: center; width: 36px; height: 4px; border-radius: 4px; background: var(--border); flex: none; }
+.grabber-zone { align-self: stretch; height: 26px; margin: -10px -20px -8px; display: flex; justify-content: center; align-items: center; touch-action: none; flex: none; }
+.grabber { width: 36px; height: 4px; border-radius: 4px; background: var(--border); flex: none; }
 .sheet-title { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0.06em; }
 .field { display: flex; flex-direction: column; gap: 6px; flex: none; }
 .field-label { font-size: 12px; color: var(--text-2); letter-spacing: 0.12em; }
@@ -368,3 +369,61 @@ input::placeholder { color: #7A7F86; }
 }
 .help { margin: 0; padding: 12px 18px 12px 34px; font-size: 13px; line-height: 1.7; color: var(--text-2); display: flex; flex-direction: column; gap: 6px; }
 .version { margin: 0; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+
+/* ===== 手感：按下回饋、轉場、進出場動畫 ===== */
+.day, .tag, .chip, .btn-new, .btn-cal, .btn-ghost, .btn-primary, .btn-outline, .cal-day, .cal-nav, .gear, .back,
+.note-input button, .missed-head button, .toast button, .cal-today, .swipe-actions button, .banner button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, opacity 0.2s ease, filter 0.15s ease;
+}
+.day:active, .tag:active, .chip:active, .cal-day:active { transform: scale(0.95); }
+.btn-new:active, .btn-cal:active, .btn-ghost:active, .btn-primary:active, .btn-outline:active, .cal-today:active { transform: scale(0.97); filter: brightness(0.94); }
+.gear:active, .back:active, .cal-nav:active, .note-input button:active, .missed-head button:active, .toast button:active, .banner button:active { transform: scale(0.88); }
+.swipe-actions button:active { filter: brightness(0.9); }
+.btn-primary:disabled:active, .btn-outline:disabled:active { transform: none; filter: none; }
+.card.pressed, .note-row.pressed { filter: brightness(0.97); }
+
+/* 面板：遮罩淡入、面板由下滑入 */
+.overlay { animation: fadeIn 0.25s ease both; transition: opacity 0.3s ease; }
+.overlay.closing { opacity: 0; pointer-events: none; }
+.sheet { animation: sheetIn 0.34s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* 設定頁：由右滑入 */
+.settings { animation: slideInRight 0.34s cubic-bezier(0.32, 0.72, 0, 1) both; transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1); }
+.settings.closing { transform: translateX(100%); pointer-events: none; }
+@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+/* 提示：浮上／沉下 */
+.toast, .banner { animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; transition: transform 0.24s ease, opacity 0.24s ease; }
+.toast.closing { opacity: 0; transform: translateY(12px); pointer-events: none; }
+.banner.closing { opacity: 0; transform: translateY(-16px); pointer-events: none; }
+@keyframes popIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+.banner { animation-name: popInTop; }
+@keyframes popInTop { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+
+/* 錯過的提醒：整塊收合 */
+.missed { animation: fadeIn 0.28s ease both; transition: opacity 0.24s ease, transform 0.24s ease; }
+.missed.closing { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+.missed-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.26s ease; }
+.missed-fold > * { min-height: 0; overflow: hidden; }
+.missed-fold.folded { grid-template-rows: 0fr; }
+
+/* 事項、隨手記增減：展開／收合 */
+.collapse { display: grid; grid-template-rows: 1fr; }
+.collapse-inner { min-height: 0; overflow: hidden; }
+.task-slot { padding-bottom: 10px; }
+.collapse.enter { animation: expand 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.collapse.exit { animation: collapse 0.26s ease both; pointer-events: none; }
+@keyframes expand { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+@keyframes collapse { from { grid-template-rows: 1fr; opacity: 1; } to { grid-template-rows: 0fr; opacity: 0; } }
+.fade-in { animation: fadeIn 0.22s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; transition-duration: 0.01ms !important; }
+  .day:active, .tag:active, .chip:active, .cal-day:active, .btn-new:active, .btn-cal:active, .btn-ghost:active, .btn-primary:active,
+  .btn-outline:active, .gear:active, .back:active, .cal-nav:active { transform: none; }
+}

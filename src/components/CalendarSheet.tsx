@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { WEEKDAYS_MON, monthCells, parseISO } from '../lib/dates';
+import { Sheet } from './Sheet';
 
 interface Props {
   day: string;
+  closing: boolean;
   today: string;
   marks: (iso: string) => boolean;
   onPick: (iso: string) => void;
@@ -16,7 +18,7 @@ const Chevron = ({ d }: { d: string }) => (
   </svg>
 );
 
-export function CalendarSheet({ day, today, marks, onPick, onToday, onClose }: Props) {
+export function CalendarSheet({ day, closing, today, marks, onPick, onToday, onClose }: Props) {
   const [ym, setYm] = useState(() => {
     const d = parseISO(day);
     return { y: d.getFullYear(), m: d.getMonth() };
@@ -35,10 +37,7 @@ export function CalendarSheet({ day, today, marks, onPick, onToday, onClose }: P
   }, [onClose]);
 
   return (
-    <div className="overlay">
-      <button type="button" className="scrim" aria-label="關閉月曆" onClick={onClose} />
-      <section className="sheet cal-sheet" role="dialog" aria-modal="true" aria-labelledby="cal-title">
-        <span className="grabber" aria-hidden="true" />
+    <Sheet closing={closing} onClose={onClose} labelledBy="cal-title" scrimLabel="關閉月曆" className="cal-sheet">
         <div className="cal-head">
           <button type="button" className="cal-nav" aria-label="上個月" onClick={() => shift(-1)}>
             <Chevron d="M11 3.5L5.5 9l5.5 5.5" />
@@ -73,7 +72,6 @@ export function CalendarSheet({ day, today, marks, onPick, onToday, onClose }: P
           )}
         </div>
         <button type="button" className="cal-today" onClick={onToday}>回到今天</button>
-      </section>
-    </div>
+    </Sheet>
   );
 }
