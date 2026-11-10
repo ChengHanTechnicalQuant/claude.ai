@@ -85,7 +85,13 @@ export function Sheet({ closing, onClose, labelledBy, scrimLabel, className = ''
 
   return (
     <div className={'overlay' + (closing ? ' closing' : '')}>
-      <button type="button" className="scrim" aria-label={scrimLabel} onClick={onClose} />
+      <button
+        type="button"
+        className="scrim"
+        aria-label={scrimLabel}
+        onClick={onClose}
+        style={{ opacity: Math.max(0, 1 - dragY / 320), transition: dragging ? 'none' : 'opacity 0.3s ease' }}
+      />
       <section
         ref={sheetRef}
         className={'sheet ' + className}

@@ -386,20 +386,21 @@ input::placeholder { color: #7A7F86; }
 .btn-primary:disabled:active, .btn-outline:disabled:active { transform: none; filter: none; }
 .card.pressed, .note-row.pressed { filter: brightness(0.97); }
 
+/* 注意：進場動畫只能用 backwards；用 both 的話結束後會一直蓋住行內的 transform，拖曳就不會動 */
 /* 面板：遮罩淡入、面板由下滑入 */
-.overlay { animation: fadeIn 0.25s ease both; transition: opacity 0.3s ease; }
+.overlay { animation: fadeIn 0.25s ease backwards; transition: opacity 0.3s ease; }
 .overlay.closing { opacity: 0; pointer-events: none; }
-.sheet { animation: sheetIn 0.34s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.sheet { animation: sheetIn 0.34s cubic-bezier(0.32, 0.72, 0, 1) backwards; }
 @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* 設定頁：由右滑入 */
-.settings { animation: slideInRight 0.34s cubic-bezier(0.32, 0.72, 0, 1) both; transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1); }
+.settings { animation: slideInRight 0.34s cubic-bezier(0.32, 0.72, 0, 1) backwards; transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1); }
 .settings.closing { transform: translateX(100%); pointer-events: none; }
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 /* 提示：浮上／沉下 */
-.toast, .banner { animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; transition: transform 0.24s ease, opacity 0.24s ease; }
+.toast, .banner { animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards; transition: transform 0.24s ease, opacity 0.24s ease; }
 .toast.closing { opacity: 0; transform: translateY(12px); pointer-events: none; }
 .banner.closing { opacity: 0; transform: translateY(-16px); pointer-events: none; }
 @keyframes popIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
@@ -407,7 +408,7 @@ input::placeholder { color: #7A7F86; }
 @keyframes popInTop { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
 
 /* 錯過的提醒：整塊收合 */
-.missed { animation: fadeIn 0.28s ease both; transition: opacity 0.24s ease, transform 0.24s ease; }
+.missed { animation: fadeIn 0.28s ease backwards; transition: opacity 0.24s ease, transform 0.24s ease; }
 .missed.closing { opacity: 0; transform: translateY(-6px); pointer-events: none; }
 .missed-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.26s ease; }
 .missed-fold > * { min-height: 0; overflow: hidden; }
