@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { formatHM } from '../lib/dates';
 import type { Note } from '../types';
+import { SwipeRow, type SwipeAction } from './SwipeRow';
 
 interface Props {
   notes: Note[];
+  openId: string | null;
+  actionsFor: (n: Note) => SwipeAction[];
+  onOpenChange: (id: string | null) => void;
   onAdd: (text: string) => void;
 }
 
-export function Notes({ notes, onAdd }: Props) {
+export function Notes({ notes, openId, actionsFor, onOpenChange, onAdd }: Props) {
   const [draft, setDraft] = useState('');
   const submit = () => {
     const text = draft.trim();
@@ -20,10 +24,19 @@ export function Notes({ notes, onAdd }: Props) {
       <h2>隨手記</h2>
       <div className="notes-card">
         {notes.map((n) => (
-          <div className="note-row" key={n.id}>
+          <SwipeRow
+            key={n.id}
+            id={n.id}
+            open={openId === n.id}
+            anyOpen={openId !== null}
+            actions={actionsFor(n)}
+            onOpenChange={onOpenChange}
+            wrapClass="note-wrap"
+            frontClass="note-row"
+          >
             <p>{n.text}</p>
             <span className="at">{formatHM(n.createdAt)}</span>
-          </div>
+          </SwipeRow>
         ))}
         <div className="note-input">
           <label htmlFor="note" className="sr-only">寫一則隨手記</label>

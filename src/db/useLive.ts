@@ -8,7 +8,6 @@ export function useLive<T>(querier: () => Promise<T>): T | undefined {
     const sub = liveQuery(querier).subscribe({ next: setValue, error: (e) => console.error(e) });
     return () => sub.unsubscribe();
     // querier 在呼叫端是固定的查詢，不需要重新訂閱
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return value;
 }

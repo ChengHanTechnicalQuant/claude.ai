@@ -13,7 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import { db } from './db/db';
-import { purgeExpired, seedIfFirstRun } from './db/maintenance';
+import { purgeExpired, rolloverDb, seedIfFirstRun } from './db/maintenance';
 import { todayISO } from './lib/dates';
 
 async function boot() {
@@ -21,6 +21,7 @@ async function boot() {
     await db.open();
     await purgeExpired(db);
     await seedIfFirstRun(db, todayISO());
+    await rolloverDb(db, todayISO());
   } catch (e) {
     console.error('資料庫啟動失敗', e);
   }
