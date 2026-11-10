@@ -4,6 +4,7 @@ import { addDays, dayLabel } from './dates';
 import type { EditorForm } from './editor';
 import { formTime } from './editor';
 import type { Note, Task } from '../types';
+import { endSeries, repeatChanged, repeatFromForm } from './repeat';
 
 const withTask = (t: Task): Action['changes'] => ({ ...emptyChanges(), putTasks: [t] });
 const withNote = (n: Note): Action['changes'] => ({ ...emptyChanges(), putNotes: [n] });
@@ -60,8 +61,18 @@ export function noteToTask(n: Note, now: number, newTaskId: string): Action {
   };
 }
 
-/** 儲存新增／編輯面板。事項是空的時候回傳 null（不能儲存）。 */
-export function saveForm(form: EditorForm, existing: Task | undefined, now: number, newTaskId: string): Action | null {
+/**
+ * 儲存新增／編輯面板。事項是空的時候回傳 null（不能儲存）。
+ * all：目前所有事項（改重複設定時要找出同一組的其他筆）；newSeriesId：需要新開一組重複時用的 id。
+ */
+export function saveForm(
+  form: EditorForm,
+  existing: Task | undefined,
+  now: number,
+  newTaskId: string,
+  all: Task[] = [],
+  newSeriesId: string = newTaskId,
+): Action | null {
   const title = form.title.trim();
   if (!title) return null;
   const time = formTime(form);
@@ -77,12 +88,19 @@ export function saveForm(form: EditorForm, existing: Task | undefined, now: numb
       delayDays: 0,
       createdAt: now,
       updatedAt: now,
+      ...(form.repeat !== 'none' ? { repeat: repeatFromForm(form, newSeriesId) } : {}),
     };
     return { changes: withTask(task), message: '已新增到 ' + dayLabel(form.date) };
   }
   const moved = existing.date !== form.date;
-  return {
-    changes: withTask({ ...existing, title, date: form.date, time, category: form.category, updatedAt: now }),
-    message: moved ? '已移到 ' + dayLabel(form.date) : '已更新',
-  };
+  const base: Task = { ...existing, title, date: form.date, time, category: form.category, updatedAt: now };
+  const message = moved ? '已移到 ' + dayLabel(form.date) : '已更新';
+  if (!repeatChanged(existing, form)) return { changes: withTask(base), message };
+
+  // 重複設定改了：這一筆另開一組新的（或變成不重複），舊的那組在這一筆之前結束、之後還沒做的拿掉
+  const { repeat: _old, ...plain } = base;
+  const rep = repeatFromForm(form, newSeriesId);
+  const putTasks: Task[] = [rep ? { ...plain, repeat: rep } : plain];
+  if (existing.repeat) putTasks.push(...endSeries(all, existing, now, existing.repeat.occurrence));
+  return { changes: { ...emptyChanges(), putTasks }, message };
 }

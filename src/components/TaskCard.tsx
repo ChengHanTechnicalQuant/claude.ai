@@ -1,5 +1,6 @@
 import type { Phase } from '../lib/animatedList';
 import type { Task } from '../types';
+import { REPEAT_LABEL } from '../lib/repeat';
 import { SwipeRow, type SwipeAction } from './SwipeRow';
 
 interface Props {
@@ -29,6 +30,7 @@ export function TaskCard({ task, phase, open, anyOpen, actions, onOpenChange, on
           <div className="row1">
             <div className="left">
               <span className="cat">{task.category}</span>
+              {task.repeat && <span className="rep">↻ {REPEAT_LABEL[task.repeat.freq]}</span>}
               {!task.done && task.delayDays > 0 && <span className="delay">延 {task.delayDays} 天</span>}
             </div>
             <span className="time">{task.time}</span>

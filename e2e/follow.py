@@ -5,7 +5,7 @@ async def main():
         b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
         ctx = await b.new_context(viewport={'width':390,'height':844}, is_mobile=True, has_touch=True, locale='zh-TW')
         page = await ctx.new_page(); cdp = await ctx.new_cdp_session(page)
-        await page.goto('http://localhost:4173/'); await page.wait_for_selector('.card')
+        await page.goto('http://localhost:4173/?demo=1'); await page.wait_for_selector('.card')
         await page.locator('.btn-new').click(); await page.wait_for_selector('.sheet'); await page.wait_for_timeout(600)
         y = (await page.locator('.sheet').bounding_box())['y']
         t = lambda ty, yy=None: cdp.send('Input.dispatchTouchEvent', {'type':ty,'touchPoints':[{'x':330,'y':yy}] if yy is not None else []})

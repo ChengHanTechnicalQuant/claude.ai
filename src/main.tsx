@@ -13,7 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import { db } from './db/db';
-import { purgeExpired, rolloverDb, seedIfFirstRun } from './db/maintenance';
+import { ensureRepeats, purgeExpired, removeSampleData, rolloverDb, seedIfFirstRun } from './db/maintenance';
 import { loadSettings } from './db/settings';
 import { isISODate } from './lib/swLogic';
 import { collectBootMissed } from './notify/boot';
@@ -25,7 +25,9 @@ async function boot() {
   try {
     await db.open();
     await purgeExpired(db);
-    await seedIfFirstRun(db, todayISO());
+    await removeSampleData(db); // 清掉以前版本放的範例資料（只做一次）
+    if (new URLSearchParams(location.search).has('demo')) await seedIfFirstRun(db, todayISO()); // 示範／測試用
+    await ensureRepeats(db, todayISO());
     // 先找出錯過的提醒，再把沒做完的延到今天（延了之後就看不到原本的日期了）
     initialMissed = await collectBootMissed(db, await loadSettings(db));
     await rolloverDb(db, todayISO());

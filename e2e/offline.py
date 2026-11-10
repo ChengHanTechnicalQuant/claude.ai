@@ -1,6 +1,6 @@
 import asyncio
 from playwright.async_api import async_playwright
-URL='http://localhost:4174/claude.ai/'
+URL='http://localhost:4174/claude.ai/?demo=1'
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])

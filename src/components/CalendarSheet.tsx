@@ -6,7 +6,9 @@ interface Props {
   day: string;
   closing: boolean;
   today: string;
-  marks: (iso: string) => boolean;
+  marks?: (iso: string) => boolean;
+  minDate?: string; // 早於這天的日子不能選
+  todayLabel?: string;
   onPick: (iso: string) => void;
   onToday: () => void;
   onClose: () => void;
@@ -18,7 +20,7 @@ const Chevron = ({ d }: { d: string }) => (
   </svg>
 );
 
-export function CalendarSheet({ day, closing, today, marks, onPick, onToday, onClose }: Props) {
+export function CalendarSheet({ day, closing, today, marks, minDate, todayLabel = '回到今天', onPick, onToday, onClose }: Props) {
   const [ym, setYm] = useState(() => {
     const d = parseISO(day);
     return { y: d.getFullYear(), m: d.getMonth() };
@@ -60,8 +62,9 @@ export function CalendarSheet({ day, closing, today, marks, onPick, onToday, onC
               <button
                 key={iso}
                 type="button"
-                className={'cal-day' + (iso === today ? ' today' : '') + (marks(iso) ? ' has' : '')}
+                className={'cal-day' + (iso === today ? ' today' : '') + (marks?.(iso) ? ' has' : '')}
                 aria-pressed={iso === day}
+                disabled={!!minDate && iso < minDate}
                 aria-label={`${ym.m + 1}月${Number(iso.slice(8))}日${iso === today ? '（今天）' : ''}`}
                 onClick={() => onPick(iso)}
               >
@@ -71,7 +74,7 @@ export function CalendarSheet({ day, closing, today, marks, onPick, onToday, onC
             ),
           )}
         </div>
-        <button type="button" className="cal-today" onClick={onToday}>回到今天</button>
+        <button type="button" className="cal-today" onClick={onToday}>{todayLabel}</button>
     </Sheet>
   );
 }

@@ -1,4 +1,5 @@
 import type { Category, Task, TimeValue } from '../types';
+import type { RepeatFreq } from '../types';
 import { addDays } from './dates';
 
 export type TimeMode = '' | '上午' | '下午' | 'pick';
@@ -11,6 +12,8 @@ export interface EditorForm {
   category: Category;
   timeMode: TimeMode;
   timeVal: string; // 'HH:mm'，只在 timeMode === 'pick' 時使用
+  repeat: 'none' | RepeatFreq;
+  until: string; // 重複的結束日期，'' = 不結束
 }
 
 const HM = /^\d{1,2}:\d{2}$/;
@@ -18,7 +21,7 @@ export const DEFAULT_PICK_TIME = '09:00';
 
 /** 新增：空白，日期預設為目前看的那天，分類預設待辦 */
 export function newForm(day: string): EditorForm {
-  return { mode: 'new', id: null, title: '', date: day, category: '待辦', timeMode: '', timeVal: DEFAULT_PICK_TIME };
+  return { mode: 'new', id: null, title: '', date: day, category: '待辦', timeMode: '', timeVal: DEFAULT_PICK_TIME, repeat: 'none', until: '' };
 }
 
 /** 編輯：帶入原本的內容 */
@@ -32,6 +35,8 @@ export function formFromTask(t: Task): EditorForm {
     category: t.category,
     timeMode: isHM ? 'pick' : (t.time as TimeMode),
     timeVal: isHM ? t.time : DEFAULT_PICK_TIME,
+    repeat: t.repeat ? t.repeat.freq : 'none',
+    until: t.repeat?.until ?? '',
   };
 }
 

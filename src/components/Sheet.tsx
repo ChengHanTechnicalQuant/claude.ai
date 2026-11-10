@@ -46,7 +46,7 @@ export function Sheet({ closing, onClose, labelledBy, scrimLabel, className = ''
       const t = e.touches[0];
       x0 = t.clientX;
       y0 = t.clientY;
-      mode = (e.target as Element).closest('input, textarea, select, .grabber-zone') ? 'skip' : 'idle';
+      mode = (e.target as Element).closest('input, textarea, select, .grabber-zone, .wheel') ? 'skip' : 'idle';
     };
     const onMove = (e: TouchEvent) => {
       if (mode === 'skip') return;

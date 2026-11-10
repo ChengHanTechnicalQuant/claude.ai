@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from './components/Banner';
 import { CalendarSheet } from './components/CalendarSheet';
 import { EditSheet } from './components/EditSheet';
+import { RepeatDeleteSheet } from './components/RepeatDeleteSheet';
 import { CalendarIcon, GearIcon, PlusIcon } from './components/Icons';
 import { MissedBlock } from './components/MissedBlock';
 import { Notes } from './components/Notes';
@@ -13,10 +14,11 @@ import { Toast } from './components/Toast';
 import { WeekStrip } from './components/WeekStrip';
 import { commit } from './db/changes';
 import { db } from './db/db';
-import { addNote, rolloverDb } from './db/maintenance';
+import { addNote, ensureRepeats, rolloverDb } from './db/maintenance';
 import { loadSettings, saveSettings } from './db/settings';
 import { useLive } from './db/useLive';
 import * as A from './lib/actions';
+import { deleteSeries, withRepeats } from './lib/repeat';
 import type { Action, Changes } from './lib/changes';
 import { useAnimatedList } from './lib/animatedList';
 import { rangeText, weekDates } from './lib/dates';
@@ -54,6 +56,7 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [form, setForm] = useState<EditorForm | null>(null);
   const [calOpen, setCalOpen] = useState(false);
+  const [delAsk, setDelAsk] = useState<Task | null>(null); // 要刪除的是重複事項，等著問「這一次還是全部」
   const [toast, setToast] = useState<{ text: string; undo: Changes } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -65,6 +68,11 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
     void rolloverDb(db, today);
     if (prev !== today) setDay((d) => (d === prev ? today : d));
   }, [today]);
+
+  // 補排重複事項；沒有需要補的時候不會寫入，所以不會一直循環
+  useEffect(() => {
+    if (tasks) void ensureRepeats(db, today);
+  }, [tasks, today]);
 
   useReminders({
     tasks,
@@ -89,6 +97,7 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
 
   // 讓面板、提示「消失」時也有動畫
   const formP = usePresence(form);
+  const delP = usePresence(delAsk);
   const calP = usePresence(calOpen ? true : null);
   const settingsP = usePresence(settingsOpen ? true : null, 340);
   const toastP = usePresence(toast, 240);
@@ -119,7 +128,7 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
   /** 執行一個動作，並出現可以復原的提示（一次只保留最近一個） */
   const run = async (a: Action) => {
     setOpenId(null);
-    const undo = await commit(db, a.changes);
+    const undo = await commit(db, withRepeats(a, tasks, today, Date.now(), newId).changes);
     showToast(a.message, undo);
   };
 
@@ -132,16 +141,23 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
     await commit(db, inverse);
   };
 
+  /** 重複事項要先問；一般事項直接刪 */
+  const askDelete = (t: Task) => {
+    if (!t.repeat) return void run(A.deleteTask(t, Date.now()));
+    setOpenId(null);
+    setDelAsk(t);
+  };
+
   const taskActions = (t: Task): SwipeAction[] =>
     t.done
       ? [
           { label: '恢復', color: BLUE, run: () => run(A.restoreTask(t, Date.now())) },
-          { label: '刪除', color: RED, run: () => run(A.deleteTask(t, Date.now())) },
+          { label: '刪除', color: RED, run: () => askDelete(t) },
         ]
       : [
           { label: '完成', color: BLUE, run: () => run(A.completeTask(t, Date.now())) },
           { label: '延後', color: GREY, run: () => run(A.delayTask(t, Date.now())) },
-          { label: '刪除', color: RED, run: () => run(A.deleteTask(t, Date.now())) },
+          { label: '刪除', color: RED, run: () => askDelete(t) },
         ];
 
   const noteActions = (n: Note): SwipeAction[] => [
@@ -153,7 +169,7 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
   const save = () => {
     if (!form) return;
     const existing = form.id ? tasks.find((t) => t.id === form.id) : undefined;
-    const action = A.saveForm(form, existing, Date.now(), newId());
+    const action = A.saveForm(form, existing, Date.now(), newId(), tasks, newId());
     if (!action) return;
     setForm(null);
     void run(action);
@@ -237,6 +253,24 @@ export default function App({ initialMissed = [], initialDay }: AppProps) {
       )}
 
       {toastP.shown && <Toast text={toastP.shown.text} closing={toastP.closing} onUndo={undo} />}
+
+      {delP.shown && (
+        <RepeatDeleteSheet
+          task={delP.shown}
+          closing={delP.closing}
+          onCancel={() => setDelAsk(null)}
+          onOne={() => {
+            const t = delP.shown!;
+            setDelAsk(null);
+            void run(A.deleteTask(t, Date.now()));
+          }}
+          onAll={() => {
+            const t = delP.shown!;
+            setDelAsk(null);
+            void run(deleteSeries(tasks, t, Date.now()));
+          }}
+        />
+      )}
 
       {formP.shown && (
         <EditSheet

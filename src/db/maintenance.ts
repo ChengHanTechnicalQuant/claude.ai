@@ -1,5 +1,6 @@
-import { addDays } from '../lib/dates';
+import { addDays, todayISO } from '../lib/dates';
 import { newId } from '../lib/id';
+import { planRepeats } from '../lib/repeat';
 import { planRollover } from '../lib/rollover';
 import type { Note, Task } from '../types';
 import type { AppDB } from './db';
@@ -11,10 +12,12 @@ export function isExpired(deletedAt: number | undefined, now: number): boolean {
   return deletedAt !== undefined && now - deletedAt > PURGE_AFTER_MS;
 }
 
-export async function purgeExpired(db: AppDB, now: number = Date.now()): Promise<void> {
+export async function purgeExpired(db: AppDB, now: number = Date.now(), today: string = todayISO(new Date(now))): Promise<void> {
   const tasks = await db.tasks.toArray();
   const notes = await db.notes.toArray();
-  await db.tasks.bulkDelete(tasks.filter((t) => isExpired(t.deletedAt, now)).map((t) => t.id));
+  // 重複事項被刪掉的那幾筆，在它的日期過去之前要留著，不然會被當成還沒排而重新排出來
+  const keep = (t: Task) => !!t.repeat && t.repeat.occurrence >= today;
+  await db.tasks.bulkDelete(tasks.filter((t) => isExpired(t.deletedAt, now) && !keep(t)).map((t) => t.id));
   await db.notes.bulkDelete(notes.filter((n) => isExpired(n.deletedAt, now)).map((n) => n.id));
   await db.firedReminders.where('firedAt').below(now - PURGE_AFTER_MS).delete();
 }
@@ -65,7 +68,39 @@ export function buildSampleData(today: string, now: number): { tasks: Task[]; no
 }
 
 const SEEDED = 'seeded';
+const SAMPLES_REMOVED = 'samplesRemoved';
 
+/** 範例資料的內容。只用來辨認並清掉以前版本放進去的範例（標題與備註都要完全一樣才會清）。 */
+const SAMPLE_TASKS: [title: string, note: string][] = [
+  ['週一部門會議', '確認本週優先順序'],
+  ['更新專案進度表', ''],
+  ['晨會', '準備上週進度三點'],
+  ['廠商報價', '已寄出，等對方回覆修改後的價格'],
+  ['與設計組對稿', '會議室 B，帶上週的版面稿'],
+  ['整理 Q4 預算表', '寄給主管過目'],
+  ['幫家人訂週末餐廳', '週六晚上，四個人'],
+  ['法務合約審閱', '週三前沒回就再追一次'],
+  ['週報', '本週完成事項與下週計畫'],
+];
+const SAMPLE_NOTES = ['影印機碳粉快沒了，下午記得跟總務說。', '新版合約範本放在共用資料夾的「法務」裡。'];
+
+/** 一次性：清掉以前版本放進去的範例事項與隨手記（只做一次，之後使用者自己寫的不會被動到） */
+export async function removeSampleData(db: AppDB): Promise<number> {
+  return db.transaction('rw', db.tasks, db.notes, db.kv, async () => {
+    if (await db.kv.get(SAMPLES_REMOVED)) return 0;
+    const tasks = await db.tasks.toArray();
+    const notes = await db.notes.toArray();
+    const isSampleTask = (t: Task) => !t.repeat && SAMPLE_TASKS.some(([title, note]) => t.title === title && t.note === note);
+    const taskIds = tasks.filter(isSampleTask).map((t) => t.id);
+    const noteIds = notes.filter((n) => SAMPLE_NOTES.includes(n.text)).map((n) => n.id);
+    await db.tasks.bulkDelete(taskIds);
+    await db.notes.bulkDelete(noteIds);
+    await db.kv.put({ key: SAMPLES_REMOVED, value: true });
+    return taskIds.length + noteIds.length;
+  });
+}
+
+/** 只給示範／自動測試用：網址加 ?demo=1 而且資料庫是空的時候，放一份範例資料。平常使用不會碰到。 */
 export async function seedIfFirstRun(db: AppDB, today: string, now: number = Date.now()): Promise<boolean> {
   return db.transaction('rw', db.tasks, db.notes, db.kv, async () => {
     if (await db.kv.get(SEEDED)) return false;
@@ -87,5 +122,14 @@ export async function rolloverDb(db: AppDB, today: string, now: number = Date.no
     const changed = planRollover(await db.tasks.toArray(), today, now);
     if (changed.length) await db.tasks.bulkPut(changed);
     return changed.length;
+  });
+}
+
+/** 補排重複事項（開啟 App、過了午夜、時間往後走時用）。回傳新增幾筆 */
+export async function ensureRepeats(db: AppDB, today: string, now: number = Date.now()): Promise<number> {
+  return db.transaction('rw', db.tasks, async () => {
+    const added = planRepeats(await db.tasks.toArray(), today, now, newId);
+    if (added.length) await db.tasks.bulkAdd(added);
+    return added.length;
   });
 }

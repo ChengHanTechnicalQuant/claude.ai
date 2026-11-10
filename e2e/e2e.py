@@ -1,7 +1,8 @@
+import re
 import asyncio, json
 from playwright.async_api import async_playwright
 
-URL='http://localhost:4173/'
+URL='http://localhost:4173/?demo=1'
 async def touch(cdp, pts):
     # pts: list of (x,y) ; first=start, last=end
     await cdp.send('Input.dispatchTouchEvent', {'type':'touchStart','touchPoints':[{'x':pts[0][0],'y':pts[0][1]}]})
@@ -108,7 +109,9 @@ async def main():
         print('新增面板:', await page.inner_text('.sheet-title'), '空白時儲存鈕 disabled =', dis, '按鈕字:', await page.inner_text('.btn-primary'))
         await page.fill('#ed-title','寄合約')
         await page.click('.chip:has-text("指定")')
-        await page.fill('#ed-time','10:30')
+        for col, text in ((0,'上午'),(1,'10'),(2,'30')):
+            await page.locator('.wheel-col').nth(col).locator('.wheel-item', has_text=re.compile('^'+text+'$')).click()
+            await page.wait_for_timeout(700)
         await page.click('.chip:has-text("私人")')
         await page.click('.chip:has-text("後天")')
         await page.screenshot(path='/tmp/shots/new.png')

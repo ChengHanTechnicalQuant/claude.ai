@@ -6,7 +6,7 @@ async def main():
         ctx = await b.new_context(viewport={'width':390,'height':844}, is_mobile=True, has_touch=True, locale='zh-TW', timezone_id='Asia/Taipei')
         page = await ctx.new_page()
         errs=[]; page.on('pageerror', lambda e: errs.append(str(e)))
-        await page.goto('http://localhost:4173/'); await page.wait_for_selector('.card')
+        await page.goto('http://localhost:4173/?demo=1'); await page.wait_for_selector('.card')
         n0 = await page.locator('.card-wrap').count()
         await page.locator('.card').first.click()
         await page.wait_for_selector('.sheet')

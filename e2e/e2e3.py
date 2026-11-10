@@ -1,7 +1,7 @@
 import asyncio, datetime, json
 from playwright.async_api import async_playwright
 TZ = datetime.timezone(datetime.timedelta(hours=8))
-URL='http://localhost:4173/'
+URL='http://localhost:4173/?demo=1'
 
 IDB_PUT = """async ([store, rows]) => {
   const db = await new Promise((res, rej) => { const r = indexedDB.open('blue-week'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });
@@ -112,7 +112,7 @@ async def main():
         # ---- D. 點通知跳到那一天 ----
         ctx = await new_ctx(b)
         page = await ctx.new_page()
-        await page.goto(URL + '?date=2026-11-12'); await page.wait_for_selector('.card, .empty')
+        await page.goto(URL + '&date=2026-11-12'); await page.wait_for_selector('.card, .empty')
         print('D ?date=2026-11-12 →', await page.inner_text('.day[aria-pressed=true] .n'), '| 網址:', page.url)
         await page.evaluate("navigator.serviceWorker.dispatchEvent(new MessageEvent('message',{data:{type:'open-date',date:'2026-11-13'}}))")
         await page.wait_for_timeout(200)

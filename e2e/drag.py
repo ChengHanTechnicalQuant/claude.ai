@@ -1,6 +1,6 @@
 import asyncio
 from playwright.async_api import async_playwright
-URL='http://localhost:4173/'
+URL='http://localhost:4173/?demo=1'
 async def drag(cdp, x, y0, y1, steps=8):
     await cdp.send('Input.dispatchTouchEvent', {'type':'touchStart','touchPoints':[{'x':x,'y':y0}]})
     for i in range(1, steps+1):

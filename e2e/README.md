@@ -5,3 +5,5 @@
 - `e2e.py`、`e2e3.py`、`anim.py`：先 `npm run build && npx vite preview --port 4173`，再 `python3 e2e/e2e.py`
 - `offline.py`：用子路徑建置後在 4174 埠提供：
   `npx vite build --base=/claude.ai/ --outDir /tmp/sub/claude.ai && (cd /tmp/sub && python3 -m http.server 4174)`，再 `python3 e2e/offline.py`
+
+注意：App 預設沒有範例資料。腳本都用網址 `?demo=1` 開啟，這樣資料庫是空的時候會放一份範例資料給測試用。
